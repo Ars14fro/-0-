@@ -247,13 +247,16 @@
       color: rgba(255, 255, 255, 0.9);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
       white-space: nowrap;
-      transition: none;
       min-width: 100px;
       visibility: hidden;
+      /* Плавное исчезновение при согласии */
+      transition: opacity 0.3s ease; 
     }
 
+    /* Анимация полета активируется только когда кнопка спозиционирована */
     .btn--no.is-ready {
       visibility: visible;
+      transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1), top 0.4s cubic-bezier(0.25, 1, 0.5, 1), background 0.15s ease;
     }
 
     .btn--no:hover {
@@ -380,17 +383,6 @@
         setNoButtonPosition(current.left, current.top);
       }
 
-      function isNearButton(clientX, clientY, padding) {
-        const rect = btnNo.getBoundingClientRect();
-        const pad = padding || 0;
-        return (
-          clientX >= rect.left - pad &&
-          clientX <= rect.right + pad &&
-          clientY >= rect.top - pad &&
-          clientY <= rect.bottom + pad
-        );
-      }
-
       function moveNoButton(avoidX, avoidY) {
         if (accepted) return;
 
@@ -515,37 +507,8 @@
         moveNoButton();
       }
 
+      // Слушатели событий
       btnYes.addEventListener("click", handleYes);
-
-      btnNo.addEventListener("mouseenter", function (e) {
-        if (!accepted) moveNoButton(e.clientX, e.clientY);
-      });
-
-      btnNo.addEventListener("mouseover", function (e) {
-        if (!accepted) moveNoButton(e.clientX, e.clientY);
-      });
-
-      document.addEventListener("mousemove", function (e) {
-        if (accepted) return;
-        if (isNearButton(e.clientX, e.clientY, 8)) {
-          moveNoButton(e.clientX, e.clientY);
-        }
-      });
-
-      btnNo.addEventListener("pointerdown", function (e) {
-        if (accepted) return;
-        if (e.pointerType === "touch") {
-          e.preventDefault();
-          moveNoButton(e.clientX, e.clientY);
-        }
-      });
-
-      btnNo.addEventListener("touchstart", function (e) {
-        if (accepted) return;
-        e.preventDefault();
-        const touch = e.touches[0];
-        if (touch) moveNoButton(touch.clientX, touch.clientY);
-      }, { passive: false });
 
       btnNo.addEventListener("click", function (e) {
         if (accepted) return;
