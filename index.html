@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Приглашение на свидание</title>
+  <style>
+    :root {
+      --bg-deep: #1a0610;
+      --bg-rose: #2d0a1e;
+      --bg-pink: #451028;
+      --glass-bg: rgba(255, 200, 220, 0.1);
+      --glass-border: rgba(255, 180, 210, 0.25);
+      --text-primary: rgba(255, 245, 250, 0.97);
+      --text-soft: rgba(255, 220, 235, 0.8);
+      --yes-from: #ffb3d9;
+      --yes-to: #ff4da6;
+      --no-bg: #a07888;
+      --no-hover: #b8909e;
+      --card-radius: 24px;
+      --btn-radius: 16px;
+      --transition-smooth: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-deep);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Cosmic background */
+    .background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-rose) 45%, var(--bg-pink) 100%);
+      overflow: hidden;
+    }
+
+    .background::before,
+    .background::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.55;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    .background::before {
+      width: 70vw;
+      height: 70vw;
+      max-width: 500px;
+      max-height: 500px;
+      top: -15%;
+      left: -10%;
+      background: radial-gradient(circle, rgba(255, 80, 150, 0.65) 0%, transparent 70%);
+    }
+
+    .background::after {
+      width: 60vw;
+      height: 60vw;
+      max-width: 450px;
+      max-height: 450px;
+      bottom: -10%;
+      right: -15%;
+      background: radial-gradient(circle, rgba(220, 60, 120, 0.55) 0%, transparent 70%);
+      animation-delay: -9s;
+    }
+
+    .nebula {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+    }
+
+    .nebula--1 {
+      width: 40vw;
+      height: 40vw;
+      max-width: 300px;
+      max-height: 300px;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 120, 180, 0.4) 0%, transparent 70%);
+      animation: pulse 12s ease-in-out infinite;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(5%, 8%) scale(1.08); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    /* Layout */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, env(safe-area-inset-top))
+               max(16px, env(safe-area-inset-right))
+               max(16px, env(safe-area-inset-bottom))
+               max(16px, env(safe-area-inset-left));
+    }
+
+    /* Glass card */
+    .card {
+      width: min(92vw, 420px);
+      padding: clamp(28px, 6vw, 40px) clamp(20px, 5vw, 32px);
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--card-radius);
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 60px rgba(255, 100, 160, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .card__text {
+      font-size: clamp(1.4rem, 5vw, 1.75rem);
+      font-weight: 300;
+      line-height: 1.45;
+      letter-spacing: 0.01em;
+      color: var(--text-primary);
+      transition: opacity var(--transition-smooth);
+      min-height: 2.9em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card__text.is-fading {
+      opacity: 0;
+    }
+
+    .card__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: clamp(24px, 5vw, 32px);
+      transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+    }
+
+    .card__actions.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn--yes {
+      width: 100%;
+      background: linear-gradient(135deg, var(--yes-from), var(--yes-to));
+      color: #fff;
+      box-shadow:
+        0 4px 20px rgba(255, 61, 154, 0.45),
+        0 0 40px rgba(255, 107, 203, 0.25);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: scale(0.92);
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin: 0;
+      overflow: hidden;
+      transition:
+        opacity var(--transition-smooth),
+        transform var(--transition-smooth),
+        visibility var(--transition-smooth),
+        max-height var(--transition-smooth),
+        padding var(--transition-smooth),
+        margin var(--transition-smooth),
+        box-shadow 0.15s ease;
+    }
+
+    .btn--yes.is-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: scale(1);
+      max-height: 80px;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+
+    .btn--yes.is-visible:hover {
+      box-shadow:
+        0 6px 28px rgba(255, 61, 154, 0.55),
+        0 0 50px rgba(255, 107, 203, 0.35);
+    }
+
+    .btn--no {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      background: var(--no-bg);
+      color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      white-space: nowrap;
+      transition: none;
+      min-width: 100px;
+      visibility: hidden;
+    }
+
+    .btn--no.is-ready {
+      visibility: visible;
+    }
+
+    .btn--no:hover {
+      background: var(--no-hover);
+    }
+
+    .btn-placeholder {
+      height: 50px;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        width: min(90vw, 460px);
+      }
+
+      .card__actions {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .btn--yes {
+        width: auto;
+        min-width: 140px;
+      }
+
+      .btn-placeholder {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background" aria-hidden="true">
+    <div class="nebula nebula--1"></div>
+  </div>
+
+  <main class="page">
+    <article class="card">
+      <p class="card__text" id="cardText">Ты пойдешь завтра со мной гулять? (Точно?)</p>
+      <div class="card__actions" id="cardActions">
+        <button type="button" class="btn btn--yes" id="btnYes">Да</button>
+        <div class="btn-placeholder" id="noPlaceholder" aria-hidden="true"></div>
+      </div>
+    </article>
+  </main>
+
+  <button type="button" class="btn btn--no" id="btnNo">Нет</button>
+
+  <audio id="refusalAudio" preload="auto" src="./refusal.mp3"></audio>
+  <audio id="salutAudio" preload="auto" src="./salut.mp3"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    (function () {
+      const cardText = document.getElementById("cardText");
+      const cardActions = document.getElementById("cardActions");
+      const btnYes = document.getElementById("btnYes");
+      const btnNo = document.getElementById("btnNo");
+      const noPlaceholder = document.getElementById("noPlaceholder");
+      const refusalAudio = document.getElementById("refusalAudio");
+      const salutAudio = document.getElementById("salutAudio");
+
+      let accepted = false;
+      let yesRevealed = false;
+      let noInitialized = false;
+      const EDGE_MARGIN = 12;
+
+      function playAudio(audio) {
+        audio.currentTime = 0;
+        audio.play().catch(function () {});
+      }
+
+      function getViewport() {
+        const vv = window.visualViewport;
+        if (vv) {
+          return {
+            left: vv.offsetLeft,
+            top: vv.offsetTop,
+            width: vv.width,
+            height: vv.height
+          };
+        }
+        return {
+          left: 0,
+          top: 0,
+          width: document.documentElement.clientWidth,
+          height: document.documentElement.clientHeight
+        };
+      }
+
+      function getButtonSize() {
+        const rect = btnNo.getBoundingClientRect();
+        return {
+          width: rect.width || btnNo.offsetWidth || 100,
+          height: rect.height || btnNo.offsetHeight || 48
+        };
+      }
+
+      function clampPosition(x, y) {
+        const vp = getViewport();
+        const size = getButtonSize();
+        const minX = vp.left + EDGE_MARGIN;
+        const minY = vp.top + EDGE_MARGIN;
+        const maxX = vp.left + vp.width - size.width - EDGE_MARGIN;
+        const maxY = vp.top + vp.height - size.height - EDGE_MARGIN;
+        return {
+          x: Math.min(Math.max(x, minX), Math.max(minX, maxX)),
+          y: Math.min(Math.max(y, minY), Math.max(minY, maxY))
+        };
+      }
+
+      function setNoButtonPosition(x, y) {
+        const pos = clampPosition(x, y);
+        btnNo.style.left = pos.x + "px";
+        btnNo.style.top = pos.y + "px";
+      }
+
+      function clampButtonToViewport() {
+        const current = btnNo.getBoundingClientRect();
+        setNoButtonPosition(current.left, current.top);
+      }
+
+      function isNearButton(clientX, clientY, padding) {
+        const rect = btnNo.getBoundingClientRect();
+        const pad = padding || 0;
+        return (
+          clientX >= rect.left - pad &&
+          clientX <= rect.right + pad &&
+          clientY >= rect.top - pad &&
+          clientY <= rect.bottom + pad
+        );
+      }
+
+      function moveNoButton(avoidX, avoidY) {
+        if (accepted) return;
+
+        const vp = getViewport();
+        const size = getButtonSize();
+        const minX = vp.left + EDGE_MARGIN;
+        const minY = vp.top + EDGE_MARGIN;
+        const maxX = vp.left + vp.width - size.width - EDGE_MARGIN;
+        const maxY = vp.top + vp.height - size.height - EDGE_MARGIN;
+        const rangeX = Math.max(0, maxX - minX);
+        const rangeY = Math.max(0, maxY - minY);
+        const minDistance = 100;
+
+        for (let attempt = 0; attempt < 20; attempt++) {
+          const x = minX + Math.random() * rangeX;
+          const y = minY + Math.random() * rangeY;
+
+          if (avoidX !== undefined && avoidY !== undefined) {
+            const cx = x + size.width / 2;
+            const cy = y + size.height / 2;
+            if (Math.hypot(cx - avoidX, cy - avoidY) < minDistance) {
+              continue;
+            }
+          }
+
+          setNoButtonPosition(x, y);
+          return;
+        }
+
+        setNoButtonPosition(minX + Math.random() * rangeX, minY + Math.random() * rangeY);
+      }
+
+      function placeNoButtonInitially() {
+        btnNo.style.width = "";
+        const placeholderRect = noPlaceholder.getBoundingClientRect();
+        const size = getButtonSize();
+        const x = placeholderRect.left + (placeholderRect.width - size.width) / 2;
+        const y = placeholderRect.top + (placeholderRect.height - size.height) / 2;
+        setNoButtonPosition(x, y);
+        btnNo.classList.add("is-ready");
+        noInitialized = true;
+      }
+
+      function launchFireworks() {
+        const duration = 5000;
+        const end = Date.now() + duration;
+        const colors = ["#ffb3d9", "#ff4da6", "#ff69b4", "#ffc0cb", "#ff85c1", "#ffd1e8", "#ff1493"];
+
+        function burst(originX, originY) {
+          confetti({
+            particleCount: 80,
+            spread: 100,
+            startVelocity: 45,
+            origin: { x: originX, y: originY },
+            colors: colors,
+            ticks: 120,
+            gravity: 0.8,
+            scalar: 1.1,
+            drift: 0,
+            shapes: ["circle", "square"]
+          });
+        }
+
+        burst(0.5, 0.55);
+        setTimeout(function () { burst(0.25, 0.5); }, 300);
+        setTimeout(function () { burst(0.75, 0.45); }, 600);
+        setTimeout(function () { burst(0.5, 0.35); }, 900);
+
+        (function frame() {
+          confetti({
+            particleCount: 4,
+            angle: 60,
+            spread: 70,
+            startVelocity: 50,
+            origin: { x: 0, y: 0.65 },
+            colors: colors
+          });
+          confetti({
+            particleCount: 4,
+            angle: 120,
+            spread: 70,
+            startVelocity: 50,
+            origin: { x: 1, y: 0.65 },
+            colors: colors
+          });
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      }
+
+      function handleYes() {
+        if (accepted) return;
+        accepted = true;
+
+        playAudio(salutAudio);
+        launchFireworks();
+
+        cardActions.classList.add("is-hidden");
+        btnNo.style.pointerEvents = "none";
+        btnNo.style.opacity = "0";
+
+        cardText.classList.add("is-fading");
+        setTimeout(function () {
+          cardText.textContent = "Раз ты согласилась, жду этого завтра ❤️";
+          cardText.classList.remove("is-fading");
+        }, 500);
+      }
+
+      function revealYesButton() {
+        if (yesRevealed) return;
+        yesRevealed = true;
+        btnYes.classList.add("is-visible");
+      }
+
+      function handleNoCaught() {
+        if (accepted) return;
+        playAudio(refusalAudio);
+        if (!yesRevealed) {
+          revealYesButton();
+        }
+        moveNoButton();
+      }
+
+      btnYes.addEventListener("click", handleYes);
+
+      btnNo.addEventListener("mouseenter", function (e) {
+        if (!accepted) moveNoButton(e.clientX, e.clientY);
+      });
+
+      btnNo.addEventListener("mouseover", function (e) {
+        if (!accepted) moveNoButton(e.clientX, e.clientY);
+      });
+
+      document.addEventListener("mousemove", function (e) {
+        if (accepted) return;
+        if (isNearButton(e.clientX, e.clientY, 8)) {
+          moveNoButton(e.clientX, e.clientY);
+        }
+      });
+
+      btnNo.addEventListener("pointerdown", function (e) {
+        if (accepted) return;
+        if (e.pointerType === "touch") {
+          e.preventDefault();
+          moveNoButton(e.clientX, e.clientY);
+        }
+      });
+
+      btnNo.addEventListener("touchstart", function (e) {
+        if (accepted) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touch) moveNoButton(touch.clientX, touch.clientY);
+      }, { passive: false });
+
+      btnNo.addEventListener("click", function (e) {
+        if (accepted) return;
+        e.preventDefault();
+        handleNoCaught();
+      });
+
+      window.addEventListener("resize", function () {
+        if (noInitialized && !accepted) {
+          clampButtonToViewport();
+        }
+      });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", function () {
+          if (noInitialized && !accepted) {
+            clampButtonToViewport();
+          }
+        });
+      }
+
+      window.addEventListener("load", function () {
+        placeNoButtonInitially();
+      });
+
+      if (document.readyState === "complete") {
+        placeNoButtonInitially();
+      } else {
+        requestAnimationFrame(placeNoButtonInitially);
+      }
+    })();
+  </script>
+</body>
+</html>
